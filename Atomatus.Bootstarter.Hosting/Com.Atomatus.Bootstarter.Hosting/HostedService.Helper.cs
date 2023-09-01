@@ -123,9 +123,9 @@ namespace Com.Atomatus.Bootstarter.Hosting
             }
         }
 
-        private void UpdateLastInvokeUtcScopedCallbacksCache(IHostedServiceDelayedCallback delayedCallback)
+        private void UpdateLastInvokeUtcScopedCallbacksCache(ICallback callback)
         {
-            int key = delayedCallback.GetType().GetHashCode();
+            int key = callback.GetType().GetHashCode();
             lastInvokeUtcScopedCallbacksCache[key] = DateTime.UtcNow.Ticks;
         }
 
