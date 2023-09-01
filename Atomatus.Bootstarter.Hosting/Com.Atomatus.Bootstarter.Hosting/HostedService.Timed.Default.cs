@@ -12,26 +12,33 @@ namespace Com.Atomatus.Bootstarter.Hosting
     /// <see cref="ITimedHostedServiceScopedCallback"/>) in each period of time
     /// reapting it.
     /// </summary>
-    internal sealed class DefaultTimedHostedService : TimedHostedService
+    internal sealed class DefaultTimedHostedService : TimedHostedService, IHostedServiceDelayed
     {
         private readonly HostedServiceHelper helper;
+        private DateTime lastInvokeTime;
 
         /// <inheritdoc />
         public DefaultTimedHostedService(
             [MaybeNull] IEnumerable<ITimedHostedServiceCallback>? callbacks,
             [NotNull] IServiceScopeFactory serviceScopeFactory,
             TimeSpan dueTime,
-            TimeSpan period)
-            : base(dueTime, period)
+            TimeSpan period) : base(dueTime, period)
         {
             this.helper = new HostedServiceHelper(callbacks, serviceScopeFactory);
+            this.lastInvokeTime = DateTime.UtcNow;
         }
 
         /// <inheritdoc />
         protected override void OnWork(CancellationToken token)
         {
-            this.helper.OnCallbacksAsync<ITimedHostedServiceScopedCallback>(token);
+            this.helper.InvokeCallbacksAsync<ITimedHostedServiceScopedCallback>(this, token);
+            this.lastInvokeTime = this.lastInvokeTime.AddTicks(DateTime.UtcNow.Ticks);
+        }
+
+        /// <inheritdoc />
+        DateTime IHostedServiceDelayed.GetLastInvokeUtcTime()
+        {
+            return lastInvokeTime;
         }
     }
 }
-

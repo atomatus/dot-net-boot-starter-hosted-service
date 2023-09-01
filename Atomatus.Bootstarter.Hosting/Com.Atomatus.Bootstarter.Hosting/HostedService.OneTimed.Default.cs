@@ -12,9 +12,10 @@ namespace Com.Atomatus.Bootstarter.Hosting
     /// make usage of callbacks (<see cref="IOneTimedHostedServiceCallback"/> or
     /// <see cref="IOneTimedHostedServiceScopedCallback"/>).
     /// </summary>
-    internal sealed class DefaultOneTimedHostedService : OneTimedHostedService
+    internal sealed class DefaultOneTimedHostedService : OneTimedHostedService, IHostedServiceDelayed
 	{
         private readonly HostedServiceHelper helper;
+        private readonly DateTime lastInvokeTime;
 
         /// <summary>
         /// Construct an OneTimedHostedService for <see cref="IOneTimedHostedServiceCallback"/>
@@ -29,12 +30,19 @@ namespace Com.Atomatus.Bootstarter.Hosting
             TimeSpan timeout) : base(timeout)
         {
             this.helper = new HostedServiceHelper(callbacks, serviceScopeFactory);
+            this.lastInvokeTime = DateTime.UtcNow;
         }
 
         /// <inheritdoc />
         protected override Task OnTimedBackgroundAsync(CancellationToken stoppingToken)
         {
-            return this.helper.OnCallbacksAsync<IOneTimedHostedServiceScopedCallback>(stoppingToken);
+            return this.helper.InvokeCallbacksAsync<IOneTimedHostedServiceScopedCallback>(this, stoppingToken);
+        }
+
+        /// <inheritdoc />
+        DateTime IHostedServiceDelayed.GetLastInvokeUtcTime()
+        {
+            return lastInvokeTime;
         }
     }
 }

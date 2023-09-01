@@ -12,7 +12,10 @@ namespace Com.Atomatus.Bootstarter.Hosting
     /// Microsoft.Extensions.DependencyInjection.IServiceCollection,
     /// TimeSpan, TimeSpan)"/>.
     /// </summary>
-    public abstract class DelayedTimedHostedServiceCallback : ITimedHostedServiceCallback, ITimedHostedServiceScopedCallback
+    public abstract class DelayedTimedHostedServiceCallback :
+        ITimedHostedServiceCallback,
+        ITimedHostedServiceScopedCallback,
+        IHostedServiceDelayedCallback
     {
         private readonly TimeSpan delayInterval;
         private DateTime lastInvokeTime;
@@ -55,5 +58,11 @@ namespace Com.Atomatus.Bootstarter.Hosting
         /// <param name="stoppingToken">A cancellation token that signals when the service is requested to stop.</param>
         /// <returns>execution action task</returns>
         protected abstract Task InvokeAsync(CancellationToken stoppingToken);
+
+        /// <inheritdoc />
+        void IHostedServiceDelayedCallback.SetLastInvokeUtcTime(DateTime lastInvokeTime)
+        {
+            this.lastInvokeTime = lastInvokeTime;
+        }
     }
 }

@@ -40,28 +40,36 @@ namespace Com.Atomatus.Bootstarter.Hosting
         /// <summary>
         /// Invokes both general and scoped callbacks asynchronously.
         /// </summary>
+        /// <param name="delayedOwner">hosted service context who implements <see cref="IHostedServiceDelayed"/> to update last invoke time in callbacks</param>
         /// <param name="stoppingToken">A cancellation token that signals when the service is requested to stop.</param>
         /// <returns>A task representing the asynchronous execution of callbacks.</returns>
-        internal Task OnCallbacksAsync<TScopedCallback>(CancellationToken stoppingToken)
+        internal Task InvokeCallbacksAsync<TScopedCallback>(
+            [NotNull] IHostedServiceDelayed delayedOwner,
+            CancellationToken stoppingToken)
             where TScopedCallback : IHostedServiceScopedCallback
         {
             return Task.WhenAll(
-                OnHostedServiceCallbacks(stoppingToken),
-                OnHostedServiceScopedCallbacks<TScopedCallback>(stoppingToken));
+                OnHostedServiceCallbacks(delayedOwner, stoppingToken),
+                OnHostedServiceScopedCallbacks<TScopedCallback>(delayedOwner, stoppingToken));
         }
 
-        private async Task OnHostedServiceCallbacks(CancellationToken stoppingToken)
+        private async Task OnHostedServiceCallbacks(
+            [NotNull] IHostedServiceDelayed delayedOwner,
+            CancellationToken stoppingToken)
         {
             foreach (var callback in callbacks)
             {
                 if (!stoppingToken.IsCancellationRequested)
                 {
+                    SetLastInvokeUtcTimeWhenDelayedCallback(delayedOwner, callback);
                     await callback.InvokeAsync(stoppingToken);
                 }
             }
         }
 
-        private async Task OnHostedServiceScopedCallbacks<TScopedCallback>(CancellationToken stoppingToken)
+        private async Task OnHostedServiceScopedCallbacks<TScopedCallback>(
+            [NotNull] IHostedServiceDelayed delayedOwner,
+            CancellationToken stoppingToken)
             where TScopedCallback : IHostedServiceScopedCallback
         {
             try
@@ -74,12 +82,23 @@ namespace Com.Atomatus.Bootstarter.Hosting
                     {
                         if (!stoppingToken.IsCancellationRequested)
                         {
+                            SetLastInvokeUtcTimeWhenDelayedCallback(delayedOwner, callback);
                             await callback.InvokeAsync(stoppingToken);
                         }
                     }
                 }
             }
             catch (ObjectDisposedException) { }
+        }
+
+        private static void SetLastInvokeUtcTimeWhenDelayedCallback(
+            [NotNull] IHostedServiceDelayed delayedOwner,
+            [NotNull] ICallback callback)
+        {
+            if (callback is IHostedServiceDelayedCallback delayedCallback)
+            {
+                delayedCallback.SetLastInvokeUtcTime(delayedOwner.GetLastInvokeUtcTime());
+            }
         }
     }
 }
