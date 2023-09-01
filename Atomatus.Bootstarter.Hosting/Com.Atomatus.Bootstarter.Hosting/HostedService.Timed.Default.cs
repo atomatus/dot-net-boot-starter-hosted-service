@@ -32,7 +32,8 @@ namespace Com.Atomatus.Bootstarter.Hosting
         protected override void OnWork(CancellationToken token)
         {
             this.helper.InvokeCallbacksAsync<ITimedHostedServiceScopedCallback>(this, token);
-            this.lastInvokeTime = this.lastInvokeTime.AddTicks(DateTime.UtcNow.Ticks);
+            this.lastInvokeTime = this.lastInvokeTime.AddTicks(
+                DateTime.UtcNow.Ticks - this.lastInvokeTime.Ticks);
         }
 
         /// <inheritdoc />
