@@ -1,5 +1,10 @@
 # Hosted Service Library for ASP.NET Core
 
+[![GitHub issues](https://img.shields.io/github/issues/atomatus/dot-net-boot-starter-hosted-service?style=flat-square&color=%232EA043&label=help%20wanted)](https://github.com/atomatus/dot-net-boot-starter-hosted-service)
+
+[![NuGet version (Com.Atomatus.BootStarter)](https://img.shields.io/nuget/v/Com.Atomatus.BootStarter.Hosting.svg?style=flat-square)](https://www.nuget.org/packages/Com.Atomatus.BootStarter.Hosting/)
+
+
 The `Com.Atomatus.Bootstarter.Hosting` is a Hosted Service library simplifies the implementation of background services in ASP.NET Core applications using the `IHostedService` interface.
 
 It offers an easy way to create and manage hosted services that run alongside the main application engine.
