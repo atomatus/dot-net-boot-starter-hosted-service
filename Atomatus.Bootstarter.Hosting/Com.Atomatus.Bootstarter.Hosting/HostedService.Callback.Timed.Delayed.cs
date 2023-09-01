@@ -38,17 +38,8 @@ namespace Com.Atomatus.Bootstarter.Hosting
         /// <returns>execution action task</returns>
         Task ICallback.InvokeAsync(CancellationToken stoppingToken)
         {
-            DateTime currTime = DateTime.UtcNow;
-            TimeSpan timeSinceLastInvoke = currTime - lastInvokeTime;
-
-            if (timeSinceLastInvoke < delayInterval)
-            {
-                //The target is TimedHostedService, this will be fired again later, just ignore it.
-                return Task.CompletedTask;
-            }
-
-            this.lastInvokeTime = currTime;
-            return this.InvokeAsync(stoppingToken);
+            IHostedServiceDelayedCallback self = this;
+            return self.InvokeDelayedAsync(stoppingToken);
         }
 
         /// <summary>
@@ -63,6 +54,29 @@ namespace Com.Atomatus.Bootstarter.Hosting
         void IHostedServiceDelayedCallback.SetLastInvokeUtcTime(DateTime lastInvokeTime)
         {
             this.lastInvokeTime = lastInvokeTime;
+        }
+
+        /// <inheritdoc />
+        bool IHostedServiceDelayedCallback.HasLastInvokeUtcTime()
+        {
+            return this.lastInvokeTime != DateTime.MinValue;
+        }
+
+        /// <inheritdoc />
+        Task<bool> IHostedServiceDelayedCallback.InvokeDelayedAsync(CancellationToken stoppingToken)
+        {
+            DateTime currTime = DateTime.UtcNow;
+            TimeSpan timeSinceLastInvoke = currTime - lastInvokeTime;
+
+            if (timeSinceLastInvoke < delayInterval)
+            {
+                //The target is TimedHostedService, this will be fired again later, just ignore it.
+                return Task.FromResult(false);
+            }
+
+            this.lastInvokeTime = currTime;
+            return this.InvokeAsync(stoppingToken)
+                .ContinueWith(e => true);
         }
     }
 }

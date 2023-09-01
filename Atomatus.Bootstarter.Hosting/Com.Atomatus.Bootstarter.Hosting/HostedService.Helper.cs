@@ -19,10 +19,11 @@ namespace Com.Atomatus.Bootstarter.Hosting
     /// context of a hosted service.
     /// </para>
     /// </summary>
-	internal sealed class HostedServiceHelper
+	internal sealed class HostedServiceHelper : IDisposable
 	{
         private readonly IEnumerable<IHostedServiceCallback> callbacks;
         private readonly IServiceScopeFactory serviceScopeFactory;
+        private readonly IDictionary<int, long> lastInvokeUtcScopedCallbacksCache;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HostedServiceHelper"/> class with the provided callbacks and service scope factory.
@@ -35,6 +36,7 @@ namespace Com.Atomatus.Bootstarter.Hosting
         {
             this.callbacks = callbacks ?? Enumerable.Empty<IHostedServiceCallback>();
             this.serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(callbacks));
+            this.lastInvokeUtcScopedCallbacksCache = new Dictionary<int, long>();
         }
 
         /// <summary>
@@ -61,7 +63,8 @@ namespace Com.Atomatus.Bootstarter.Hosting
             {
                 if (!stoppingToken.IsCancellationRequested)
                 {
-                    SetLastInvokeUtcTimeWhenDelayedCallback(delayedOwner, callback);
+                    TryGetDelayedCallbackAndSetNotInitializedLastInvokeUtc(
+                        callback, delayedOwner.GetLastInvokeUtcTime, out _);
                     await callback.InvokeAsync(stoppingToken);
                 }
             }
@@ -82,8 +85,19 @@ namespace Com.Atomatus.Bootstarter.Hosting
                     {
                         if (!stoppingToken.IsCancellationRequested)
                         {
-                            SetLastInvokeUtcTimeWhenDelayedCallback(delayedOwner, callback);
-                            await callback.InvokeAsync(stoppingToken);
+                            if(TryGetDelayedCallbackAndSetNotInitializedLastInvokeUtc(callback,
+                                () => GetLastInvokeUtcScopedCallbacksCacheOrDelayedOwner(callback, delayedOwner),
+                                out IHostedServiceDelayedCallback? delayedCallback))
+                            {
+                                if(await delayedCallback!.InvokeDelayedAsync(stoppingToken))
+                                {
+                                    UpdateLastInvokeUtcScopedCallbacksCache(delayedCallback);
+                                }
+                            }
+                            else
+                            {
+                                await callback.InvokeAsync(stoppingToken);
+                            }
                         }
                     }
                 }
@@ -91,14 +105,51 @@ namespace Com.Atomatus.Bootstarter.Hosting
             catch (ObjectDisposedException) { }
         }
 
-        private static void SetLastInvokeUtcTimeWhenDelayedCallback(
-            [NotNull] IHostedServiceDelayed delayedOwner,
-            [NotNull] ICallback callback)
+        private DateTime GetLastInvokeUtcScopedCallbacksCacheOrDelayedOwner(
+            [NotNull] ICallback callback,
+            [NotNull] IHostedServiceDelayed delayedOwner)
         {
-            if (callback is IHostedServiceDelayedCallback delayedCallback)
+            int key = callback.GetType().GetHashCode();
+
+            if(lastInvokeUtcScopedCallbacksCache.TryGetValue(key, out long ticks))
             {
-                delayedCallback.SetLastInvokeUtcTime(delayedOwner.GetLastInvokeUtcTime());
+                return new DateTime(ticks, DateTimeKind.Utc);
             }
+            else
+            {
+                DateTime dateTime = delayedOwner.GetLastInvokeUtcTime();
+                lastInvokeUtcScopedCallbacksCache.Add(key, dateTime.Ticks);
+                return dateTime;
+            }
+        }
+
+        private void UpdateLastInvokeUtcScopedCallbacksCache(IHostedServiceDelayedCallback delayedCallback)
+        {
+            int key = delayedCallback.GetType().GetHashCode();
+            lastInvokeUtcScopedCallbacksCache[key] = DateTime.UtcNow.Ticks;
+        }
+
+        private static bool TryGetDelayedCallbackAndSetNotInitializedLastInvokeUtc(
+            [NotNull] ICallback callback, Func<DateTime> lastInvokeUtcTimeFun,
+            out IHostedServiceDelayedCallback? delayedCallback)
+        {
+            delayedCallback = null;
+            if (callback is IHostedServiceDelayedCallback _delayedCallback)
+            {
+                if(!_delayedCallback.HasLastInvokeUtcTime())
+                {
+                    _delayedCallback.SetLastInvokeUtcTime(
+                    lastInvokeUtcTimeFun.Invoke());
+                }
+                
+                delayedCallback = _delayedCallback;
+            }
+            return delayedCallback != null;
+        }
+
+        public void Dispose()
+        {
+            this.lastInvokeUtcScopedCallbacksCache.Clear();
         }
     }
 }

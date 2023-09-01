@@ -36,6 +36,33 @@ namespace Com.Atomatus.Bootstarter.Hosting
         /// <returns>execution action task</returns>
         Task ICallback.InvokeAsync(CancellationToken stoppingToken)
         {
+            IHostedServiceDelayedCallback self = this;
+            return self.InvokeDelayedAsync(stoppingToken);
+        }
+
+        /// <summary>
+        /// The method to be implemented by derived classes for
+        /// performing the callback action after <see cref="delayInterval"/>.
+        /// </summary>
+        /// <param name="stoppingToken">A cancellation token that signals when the service is requested to stop.</param>
+        /// <returns>execution action task</returns>
+        protected abstract Task InvokeAsync(CancellationToken stoppingToken);
+
+        /// <inheritdoc />
+        void IHostedServiceDelayedCallback.SetLastInvokeUtcTime(DateTime lastInvokeTime)
+        {
+            this.lastInvokeTime = lastInvokeTime;
+        }
+
+        /// <inheritdoc />
+        bool IHostedServiceDelayedCallback.HasLastInvokeUtcTime()
+        {
+            return this.lastInvokeTime != DateTime.MinValue;
+        }
+
+        /// <inheritdoc />
+        Task<bool> IHostedServiceDelayedCallback.InvokeDelayedAsync(CancellationToken stoppingToken)
+        {
             DateTime currTime = DateTime.UtcNow;
             TimeSpan timeSinceLastInvoke = currTime - lastInvokeTime;
 
@@ -53,26 +80,11 @@ namespace Com.Atomatus.Bootstarter.Hosting
                     this.InvokeAsync(stoppingToken);
                 }, null, remainingTime, Timeout.InfiniteTimeSpan);
 
-                return Task.CompletedTask;
+                return Task.FromResult(true);
             }
 
             this.lastInvokeTime = currTime;
-            return this.InvokeAsync(stoppingToken);
-        }
-
-        /// <summary>
-        /// The method to be implemented by derived classes for
-        /// performing the callback action after <see cref="delayInterval"/>.
-        /// </summary>
-        /// <param name="stoppingToken">A cancellation token that signals when the service is requested to stop.</param>
-        /// <returns>execution action task</returns>
-        protected abstract Task InvokeAsync(CancellationToken stoppingToken);
-
-        /// <inheritdoc />
-        void IHostedServiceDelayedCallback.SetLastInvokeUtcTime(DateTime lastInvokeTime)
-        {
-            this.lastInvokeTime = lastInvokeTime;
+            return this.InvokeAsync(stoppingToken).ContinueWith(e => true);
         }
     }
 }
-

@@ -44,5 +44,11 @@ namespace Com.Atomatus.Bootstarter.Hosting
         {
             return lastInvokeTime;
         }
+
+        protected override void OnDispose()
+        {
+            base.OnDispose();
+            this.helper.Dispose();
+        }
     }
 }
