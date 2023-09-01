@@ -1,0 +1,140 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>8.0</LangVersion>
+    <Authors>Atomatus</Authors>
+    <Company>Atomatus</Company>
+    <Copyright>®2020-2023 Atomatus - All rights reserved</Copyright>
+    <Description>This library is designed to simplify the implementation of background services in ASP.NET Core applications using the IHostedService interface. It offers an easy way to create and manage hosted services that run alongside the main application engine.</Description>
+    <PackageId>Com.Atomatus.BootStarter.Hosting</PackageId>
+    <PackageTags>ef boot starter hosting hosted service API</PackageTags>
+    <PackageVersion>0.0.1</PackageVersion>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIconUrl>https://raw.githubusercontent.com/atomatus/design-template/master/logos/atomatus/logo512x512.png?token=ACNS4LJJGHPDFLXVQRCXN5TAPW3JK</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/atomatus/dot-net-boot-starter-hosted-service</PackageProjectUrl>    
+    <RepositoryUrl>https://github.com/atomatus/dot-net-boot-starter-hosted-service</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\privatekey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyVersion>1.0.0.1</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+      <Compile Remove="HostedService.Factory.cs" />
+      <Compile Include="HostedService.Factory.cs">
+          <DependentUpon>HostedService.cs</DependentUpon>
+      </Compile>
+
+      <Compile Remove="HostedService.Factories.cs" />
+      <Compile Include="HostedService.Factories.cs">
+          <DependentUpon>HostedService.cs</DependentUpon>
+      </Compile>
+
+      <Compile Remove="HostedService.TimeSpan.Extensions.cs" />
+      <Compile Include="HostedService.TimeSpan.Extensions.cs">
+          <DependentUpon>HostedService.cs</DependentUpon>
+      </Compile>
+
+      <Compile Remove="HostedService.Helper.cs" />
+      <Compile Include="HostedService.Helper.cs">
+          <DependentUpon>HostedService.cs</DependentUpon>
+      </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+      <Compile Remove="HostedService.OneTimed.cs" />
+      <Compile Include="HostedService.OneTimed.cs">
+          <DependentUpon>HostedService.cs</DependentUpon>
+      </Compile>
+      
+      <Compile Remove="HostedService.OneTimed.Factory.cs" />
+      <Compile Include="HostedService.OneTimed.Factory.cs">
+          <DependentUpon>HostedService.OneTimed.cs</DependentUpon>
+      </Compile>
+      
+      <Compile Remove="HostedService.OneTimed.Default.cs" />
+      <Compile Include="HostedService.OneTimed.Default.cs">
+          <DependentUpon>HostedService.OneTimed.cs</DependentUpon>
+      </Compile>
+      
+      <Compile Remove="HostedService.OneTimed.Extensions.cs" />
+      <Compile Include="HostedService.OneTimed.Extensions.cs">
+          <DependentUpon>HostedService.OneTimed.cs</DependentUpon>
+      </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="HostedService.Timed.cs" />
+    <Compile Include="HostedService.Timed.cs">
+        <DependentUpon>HostedService.cs</DependentUpon>
+    </Compile>
+      
+    <Compile Remove="HostedService.Timed.Factory.cs" />
+    <Compile Include="HostedService.Timed.Factory.cs">
+        <DependentUpon>HostedService.Timed.cs</DependentUpon>
+    </Compile>
+      
+    <Compile Remove="HostedService.Timed.Default.cs" />
+    <Compile Include="HostedService.Timed.Default.cs">
+        <DependentUpon>HostedService.Timed.cs</DependentUpon>
+    </Compile>
+      
+    <Compile Remove="HostedService.Timed.Extensions.cs" />
+    <Compile Include="HostedService.Timed.Extensions.cs">
+        <DependentUpon>HostedService.Timed.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="HostedService.Callback.cs" />
+    <Compile Include="HostedService.Callback.cs">
+        <DependentUpon>HostedService.cs</DependentUpon>
+    </Compile>
+
+    <Compile Remove="HostedService.Callback.OneTimed.cs" />
+    <Compile Include="HostedService.Callback.OneTimed.cs">
+        <DependentUpon>HostedService.Callback.cs</DependentUpon>
+    </Compile>
+    
+    <Compile Remove="HostedService.Callback.OneTimed.Delayed.cs" />
+    <Compile Include="HostedService.Callback.OneTimed.Delayed.cs">
+        <DependentUpon>HostedService.Callback.OneTimed.cs</DependentUpon>
+    </Compile>
+        
+    <Compile Remove="HostedService.Callback.Timed.cs" />
+    <Compile Include="HostedService.Callback.Timed.cs">
+        <DependentUpon>HostedService.Callback.cs</DependentUpon>
+    </Compile>
+    
+    <Compile Remove="HostedService.Callback.Timed.Delayed.cs" />
+    <Compile Include="HostedService.Callback.Timed.Delayed.cs">
+        <DependentUpon>HostedService.Callback.Timed.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="..\..\logo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
+  </ItemGroup>
+</Project>

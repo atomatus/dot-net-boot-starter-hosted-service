@@ -1,0 +1,49 @@
+# This workflow execute a sequence of jobs to build, 
+# release and publish a packages to NuGet.
+
+name: 00 - Dot Net Deploy to NuGet
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+env:
+  PROJ_BS_PATH: 'Atomatus.Bootstarter.Hosting/Com.Atomatus.Bootstarter.Hosting/Com.Atomatus.Bootstarter.Hosting.csproj'  
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '6.0.x'
+          
+      # region Bootstarter Hosting
+      - name: 'Restore Bootstarter.Hosting'
+        if: ${{ success() }}
+        run: dotnet restore ${{ env.PROJ_BS_PATH }}
+
+      - name: 'Build Bootstarter.Hosting'        
+        if: ${{ success() }}
+        run: dotnet build ${{ env.PROJ_BS_PATH }} --no-restore --configuration Release
+      
+      - name: 'Test Bootstarter.Hosting'        
+        if: ${{ success() }}
+        run: dotnet test ${{ env.PROJ_BS_PATH }}
+
+      - name: Publish Bootstarter.Hosting to NuGet
+        if: ${{ success() }}
+        uses: alirezanet/publish-nuget@v3.1.0
+        with:
+          PROJECT_FILE_PATH: ${{ env.PROJ_BS_PATH }}
+          VERSION_REGEX: '^\s*<PackageVersion>(.*)</PackageVersion>\s*$'
+          TAG_FORMAT: '*'
+          NUGET_KEY: ${{ secrets.NUGET_COM_ATOMATUS_AUTH_KEY }}
+          INCLUDE_SYMBOLS: true
+      # endregion 
