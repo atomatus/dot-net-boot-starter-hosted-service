@@ -289,7 +289,7 @@ public class Startup
 
         // Register callbacks
         services.AddSingleton<ITimedHostedServiceCallback, MyTimedHostedServiceCallback>();
-        services.AddSingleton<ITimedHostedServiceScopedCallback, MyTimedHostedServiceScopedCallback>();
+        services.AddScoped<ITimedHostedServiceScopedCallback, MyTimedHostedServiceScopedCallback>();
 
         // Add anonymous TimedHostedService
         services.AddTimedHostedService(
@@ -334,7 +334,7 @@ public class Startup
     {
         // ... other services
 
-        // Register the callback
+        // Register the callback as singleton
         services.AddSingleton<ITimedHostedServiceCallback>(provider =>
         {
             // Set the delay interval here
@@ -342,8 +342,18 @@ public class Startup
             return new MyDelayedTimedCallback(delayInterval);
         });
 
+        //or
+
+        // Register the callback as scoped
+        services.AddScoped<ITimedHostedServiceScopedCallback>(provider =>
+        {
+            // Set the delay interval here
+            TimeSpan delayInterval = TimeSpan.FromMinutes(5);
+            return new MyDelayedTimedCallback(delayInterval);
+        });
+
         // Add anonymous TimedHostedService
-        services.AddTimedHostedService<MyTimedHostedService>(TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(30));
+        services.AddTimedHostedService(TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(30));
     }
 }
 ```

@@ -10,7 +10,7 @@ namespace Com.Atomatus.Bootstarter.Hosting
     /// for Timed Hosted Service added in <see cref="OneTimedHostedServiceExtensions.AddOneTimedHostedService(
     /// Microsoft.Extensions.DependencyInjection.IServiceCollection, TimeSpan)"/>.
     /// </summary>
-    public abstract class DelayedOneTimedHostedServiceCallback : IOneTimedHostedServiceCallback
+    public abstract class DelayedOneTimedHostedServiceCallback : IOneTimedHostedServiceCallback, IOneTimedHostedServiceScopedCallback
     {
         private readonly TimeSpan delayInterval;
         private DateTime lastInvokeTime;

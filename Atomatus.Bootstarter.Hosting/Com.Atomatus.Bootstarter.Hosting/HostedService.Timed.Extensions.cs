@@ -22,10 +22,12 @@ namespace Com.Atomatus.Bootstarter.Hosting
         ///  <b>To make usage of callbacks with Scoped services:</b>
         ///  <list type="bullet">
         ///  <item>
-        ///  use <see cref="IServiceScopeFactory"/> in your <see cref = "ITimedHostedServiceCallback" /> implementation class;
+        ///  use <see cref="IServiceScopeFactory"/> in your <see cref = "ITimedHostedServiceCallback" /> implementation class
+        ///  when registering with <c>AddSingleton</c>;
         ///  </item>
         ///  <item>
-        ///  [Or] make usage of <see cref="ITimedHostedServiceScopedCallback"/> (best pratices).
+        ///  [Or] make usage of <see cref="ITimedHostedServiceScopedCallback"/>
+        ///  when registering with <c>AddScoped</c> (best pratices).
         ///  </item>
         ///  </list>
         /// </i>
