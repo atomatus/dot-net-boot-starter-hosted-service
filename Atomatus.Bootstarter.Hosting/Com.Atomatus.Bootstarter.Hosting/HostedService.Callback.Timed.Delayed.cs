@@ -12,7 +12,7 @@ namespace Com.Atomatus.Bootstarter.Hosting
     /// Microsoft.Extensions.DependencyInjection.IServiceCollection,
     /// TimeSpan, TimeSpan)"/>.
     /// </summary>
-    internal abstract class DelayedTimedHostedServiceCallback : ITimedHostedServiceCallback
+    public abstract class DelayedTimedHostedServiceCallback : ITimedHostedServiceCallback
     {
         private readonly TimeSpan delayInterval;
         private DateTime lastInvokeTime;
