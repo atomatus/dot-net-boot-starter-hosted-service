@@ -75,36 +75,45 @@ namespace Com.Atomatus.Bootstarter.Hosting
             CancellationToken stoppingToken)
             where TScopedCallback : IHostedServiceScopedCallback
         {
-            using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            try
             {
-                var scopedCallbacks = scope.ServiceProvider.GetService<IEnumerable<TScopedCallback>>();
-                if (scopedCallbacks != null)
+                using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
                 {
-                    foreach (var callback in scopedCallbacks)
+                    var scopedCallbacks = scope.ServiceProvider.GetService<IEnumerable<TScopedCallback>>();
+                    if (scopedCallbacks != null)
                     {
-                        try
+                        foreach (var callback in scopedCallbacks)
                         {
-                            if (!stoppingToken.IsCancellationRequested)
+                            try
                             {
-                                if (TryGetDelayedCallbackAndSetNotInitializedLastInvokeUtc(callback,
-                                    () => GetLastInvokeUtcScopedCallbacksCacheOrDelayedOwner(callback, delayedOwner),
-                                    out IHostedServiceDelayedCallback? delayedCallback))
+                                if (!stoppingToken.IsCancellationRequested)
                                 {
-                                    if (await delayedCallback!.InvokeDelayedAsync(stoppingToken))
+                                    if (TryGetDelayedCallbackAndSetNotInitializedLastInvokeUtc(callback,
+                                        () => GetLastInvokeUtcScopedCallbacksCacheOrDelayedOwner(callback, delayedOwner),
+                                        out IHostedServiceDelayedCallback? delayedCallback))
                                     {
-                                        UpdateLastInvokeUtcScopedCallbacksCache(delayedCallback);
+                                        if (await delayedCallback!.InvokeDelayedAsync(stoppingToken))
+                                        {
+                                            UpdateLastInvokeUtcScopedCallbacksCache(delayedCallback);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        await callback.InvokeAsync(stoppingToken);
                                     }
                                 }
-                                else
-                                {
-                                    await callback.InvokeAsync(stoppingToken);
-                                }
+                            }
+                            catch (ObjectDisposedException)
+                            {
+#if DEBUG
+                                throw;
+#endif
                             }
                         }
-                        catch (ObjectDisposedException) { }
                     }
                 }
             }
+            catch (ObjectDisposedException) { }
         }
 
         private DateTime GetLastInvokeUtcScopedCallbacksCacheOrDelayedOwner(
