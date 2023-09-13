@@ -27,7 +27,7 @@ namespace Com.Atomatus.Bootstarter.Hosting
         {
             return new DefaultTimedHostedService(
                 provider.GetService<IEnumerable<ITimedHostedServiceCallback>>(),
-                provider.GetRequiredService<IServiceScopeFactory>(),
+                provider,
                 this.dueTime,
                 this.period);
         }

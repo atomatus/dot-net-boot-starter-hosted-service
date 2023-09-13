@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Com.Atomatus.Bootstarter.Hosting
 {
@@ -15,25 +14,35 @@ namespace Com.Atomatus.Bootstarter.Hosting
     internal sealed class DefaultTimedHostedService : TimedHostedService, IHostedServiceDelayed
     {
         private readonly HostedServiceHelper helper;
+        private readonly SemaphoreSlim semaphore;
         private DateTime lastInvokeTime;
 
         /// <inheritdoc />
         public DefaultTimedHostedService(
             [MaybeNull] IEnumerable<ITimedHostedServiceCallback>? callbacks,
-            [NotNull] IServiceScopeFactory serviceScopeFactory,
+            [NotNull] IServiceProvider serviceProvider,
             TimeSpan dueTime,
             TimeSpan period) : base(dueTime, period)
         {
-            this.helper = new HostedServiceHelper(callbacks, serviceScopeFactory);
+            this.helper = new HostedServiceHelper(callbacks, serviceProvider);
+            this.semaphore = new SemaphoreSlim(1);
             this.lastInvokeTime = DateTime.UtcNow;
         }
 
         /// <inheritdoc />
-        protected override void OnWork(CancellationToken token)
+        protected override async void OnWork(CancellationToken token)
         {
-            this.helper.InvokeCallbacksAsync<ITimedHostedServiceScopedCallback>(this, token);
-            this.lastInvokeTime = this.lastInvokeTime.AddTicks(
-                DateTime.UtcNow.Ticks - this.lastInvokeTime.Ticks);
+            try
+            {
+                await this.semaphore.WaitAsync(token);
+                await this.helper.InvokeCallbacksAsync<ITimedHostedServiceScopedCallback>(this, token);
+                this.lastInvokeTime = this.lastInvokeTime.AddTicks(
+                    DateTime.UtcNow.Ticks - this.lastInvokeTime.Ticks);
+            }
+            finally
+            {
+                this.semaphore.Release();
+            }
         }
 
         /// <inheritdoc />

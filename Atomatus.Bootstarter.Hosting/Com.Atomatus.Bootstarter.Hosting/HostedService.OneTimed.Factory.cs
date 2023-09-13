@@ -29,7 +29,7 @@ namespace Com.Atomatus.Bootstarter.Hosting
         {
             return new DefaultOneTimedHostedService(
                 provider.GetService<IEnumerable<IOneTimedHostedServiceCallback>>(),
-                provider.GetRequiredService<IServiceScopeFactory>(),
+                provider,
                 this.timeout);
         }
     }

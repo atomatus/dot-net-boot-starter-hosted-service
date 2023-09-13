@@ -13,7 +13,7 @@
     <Description>This library is designed to simplify the implementation of background services in ASP.NET Core applications using the IHostedService interface. It offers an easy way to create and manage hosted services that run alongside the main application engine.</Description>
     <PackageId>Com.Atomatus.BootStarter.Hosting</PackageId>
     <PackageTags>ef boot starter hosting hosted service API</PackageTags>
-    <PackageVersion>0.0.6</PackageVersion>
+    <PackageVersion>0.0.7</PackageVersion>
     <PackageIcon>logo.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIconUrl>https://raw.githubusercontent.com/atomatus/design-template/master/logos/atomatus/logo512x512.png?token=ACNS4LJJGHPDFLXVQRCXN5TAPW3JK</PackageIconUrl>
@@ -25,8 +25,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\privatekey.snk</AssemblyOriginatorKeyFile>
-    <AssemblyVersion>1.0.0.6</AssemblyVersion>
-    <FileVersion>1.0.0.6</FileVersion>
+    <AssemblyVersion>1.0.0.7</AssemblyVersion>
+    <FileVersion>1.0.0.7</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -22,20 +22,20 @@ namespace Com.Atomatus.Bootstarter.Hosting
 	internal sealed class HostedServiceHelper : IDisposable
 	{
         private readonly IEnumerable<IHostedServiceCallback> callbacks;
-        private readonly IServiceScopeFactory serviceScopeFactory;
+        private readonly IServiceProvider serviceProvider;
         private readonly IDictionary<int, long> lastInvokeUtcScopedCallbacksCache;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HostedServiceHelper"/> class with the provided callbacks and service scope factory.
         /// </summary>
         /// <param name="callbacks">A collection of general <see cref="IHostedServiceCallback"/> instances.</param>
-        /// <param name="serviceScopeFactory">The service scope factory used to create scoped service scopes.</param>
+        /// <param name="serviceProvider">The service provider to create, service scope factory used to create scoped service scopes.</param>
         public HostedServiceHelper(
             [MaybeNull] IEnumerable<IHostedServiceCallback>? callbacks,
-            [NotNull] IServiceScopeFactory serviceScopeFactory)
+            [NotNull] IServiceProvider serviceProvider)
         {
             this.callbacks = callbacks ?? Enumerable.Empty<IHostedServiceCallback>();
-            this.serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(callbacks));
+            this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             this.lastInvokeUtcScopedCallbacksCache = new Dictionary<int, long>();
         }
 
@@ -75,34 +75,36 @@ namespace Com.Atomatus.Bootstarter.Hosting
             CancellationToken stoppingToken)
             where TScopedCallback : IHostedServiceScopedCallback
         {
-            try
+            using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
-                using var scope = serviceScopeFactory.CreateAsyncScope();
                 var scopedCallbacks = scope.ServiceProvider.GetService<IEnumerable<TScopedCallback>>();
                 if (scopedCallbacks != null)
                 {
                     foreach (var callback in scopedCallbacks)
                     {
-                        if (!stoppingToken.IsCancellationRequested)
+                        try
                         {
-                            if(TryGetDelayedCallbackAndSetNotInitializedLastInvokeUtc(callback,
-                                () => GetLastInvokeUtcScopedCallbacksCacheOrDelayedOwner(callback, delayedOwner),
-                                out IHostedServiceDelayedCallback? delayedCallback))
+                            if (!stoppingToken.IsCancellationRequested)
                             {
-                                if(await delayedCallback!.InvokeDelayedAsync(stoppingToken))
+                                if (TryGetDelayedCallbackAndSetNotInitializedLastInvokeUtc(callback,
+                                    () => GetLastInvokeUtcScopedCallbacksCacheOrDelayedOwner(callback, delayedOwner),
+                                    out IHostedServiceDelayedCallback? delayedCallback))
                                 {
-                                    UpdateLastInvokeUtcScopedCallbacksCache(delayedCallback);
+                                    if (await delayedCallback!.InvokeDelayedAsync(stoppingToken))
+                                    {
+                                        UpdateLastInvokeUtcScopedCallbacksCache(delayedCallback);
+                                    }
+                                }
+                                else
+                                {
+                                    await callback.InvokeAsync(stoppingToken);
                                 }
                             }
-                            else
-                            {
-                                await callback.InvokeAsync(stoppingToken);
-                            }
                         }
+                        catch (ObjectDisposedException) { }
                     }
                 }
             }
-            catch (ObjectDisposedException) { }
         }
 
         private DateTime GetLastInvokeUtcScopedCallbacksCacheOrDelayedOwner(

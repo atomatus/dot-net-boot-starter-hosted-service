@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Com.Atomatus.Bootstarter.Hosting
 {
@@ -22,14 +21,14 @@ namespace Com.Atomatus.Bootstarter.Hosting
         /// collections.
         /// </summary>
         /// <param name="callbacks">callbacks to be executed after timeout</param>
-        /// <param name="serviceScopeFactory">service scope factory to be used in attempt of recover some <see cref="IHostedServiceScopedCallback"/></param>
+        /// <param name="serviceProvider">service provider to create service scope factory to be used in attempt of recover some <see cref="IHostedServiceScopedCallback"/></param>
         /// <param name="timeout">The timeout after which the hosted service's logic should be executed.</param>
         public DefaultOneTimedHostedService(
             [MaybeNull] IEnumerable<IOneTimedHostedServiceCallback>? callbacks,
-            [NotNull] IServiceScopeFactory serviceScopeFactory,
+            [NotNull] IServiceProvider serviceProvider,
             TimeSpan timeout) : base(timeout)
         {
-            this.helper = new HostedServiceHelper(callbacks, serviceScopeFactory);
+            this.helper = new HostedServiceHelper(callbacks, serviceProvider);
             this.lastInvokeTime = DateTime.UtcNow;
         }
 
